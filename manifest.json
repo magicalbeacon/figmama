@@ -1,0 +1,19 @@
+{
+  "name": "figmama",
+  "id": "1379409131671118749",
+  "api": "1.0.0",
+  "main": "dist/code.js",
+  "capabilities": ["inspect"],
+  "enableProposedApi": false,
+  "documentAccess": "dynamic-page",
+  "editorType": [
+    "dev",
+    "figma"
+  ],
+  "ui": "ui.html",
+  "networkAccess": {
+    "allowedDomains": [
+      "none"
+    ]
+  }
+}
