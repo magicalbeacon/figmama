@@ -1,4 +1,7 @@
 import { getComponentSetParentName } from "./utils/util";
+import { syncFigmaWithStorybook } from "./utils/sync";
+import { searchOnGithub } from "./utils/github";
+
 // This plugin will open a window to prompt the user to enter a number, and
 // it will then create that many rectangles on the screen.
 
@@ -9,29 +12,29 @@ import { getComponentSetParentName } from "./utils/util";
 
 // This shows the HTML page in "ui.html".
 figma.showUI(__html__);
-
+figma.ui.postMessage(getComponentSetParentName(figma.currentPage.selection[0]))
 // Calls to "parent.postMessage" from within the HTML page will trigger this
 // callback. The callback will be passed the "pluginMessage" property of the
 // posted message.
 figma.ui.onmessage = async  (msg: {type: string, count: number}) => {
-  // One way of distinguishing between different types of messages sent from
-  // your HTML page is to use an object with a "type" property like this.
-  // console.log(JSON.stringify(figma.currentPage.selection[0].name))
-  console.log(figma.currentPage.selection[0].id)
-  const currentNode = figma.currentPage.selection[0]
-  if(currentNode.type === "COMPONENT") {
-    if(currentNode.variantProperties)
-      console.log(currentNode.variantProperties["colour code"])
-    
-  }
-  // console.log(currentNode.parent.type)
-  console.log(getComponentSetParentName(currentNode))
+  console.log("onMessage")
 
+  console.log(await searchOnGithub("button")) 
 
+  // await figma.loadAllPagesAsync()
+  // try{ 
+  //   const componentDictionary = syncFigmaWithStorybook(figma.root)
+  //   console.log(JSON.stringify(componentDictionary, null, 4))
+  // }catch(e) {
+  //   console.error(e)
+  // }
+  
 
+  
   // console.log(figma.currentPage.selection[0].parent?.name)
   // console.log(JSON.stringify(figma.currentPage.selection[0].parent, null, 4))
   // Make sure to close the plugin when you're done. Otherwise the plugin will
   // keep running, which shows the cancel button at the bottom of the screen.
-  figma.closePlugin();
+  // figma.closePlugin();
+
 };

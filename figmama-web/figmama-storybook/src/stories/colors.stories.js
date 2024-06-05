@@ -2,7 +2,7 @@ import { Header } from './Header';
 import { fn } from '@storybook/test';
 
 export default {
-  title: 'Components / Header',
+  title: 'Foundations / Colors',
   component: Header,
   // This component will have an automatically generated Autodocs entry: https://storybook.js.org/docs/writing-docs/autodocs
   tags: ['autodocs'],
@@ -25,4 +25,4 @@ export const LoggedIn = {
   },
 };
 
-export const LoggedOut = {};
+export const Colors = {};

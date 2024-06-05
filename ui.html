@@ -14,4 +14,10 @@ document.getElementById('cancel').onclick = () => {
   parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*')
 }
 
+onmessage = (event) => {
+  console.log("got this from the plugin code", event.data.pluginMessage)
+  document.getElementById("count").value = event.data.pluginMessage
+}
+
+
 </script>
