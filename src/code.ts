@@ -1,6 +1,6 @@
 import { getComponentSetParentName } from "./utils/util";
-import { syncFigmaWithStorybook } from "./utils/sync";
-import { searchOnGithub } from "./utils/github";
+import { getDiff, syncFigmaWithStorybook } from "./utils/sync";
+import { getStorybookComponents, searchOnGithub } from "./utils/github";
 
 // This plugin will open a window to prompt the user to enter a number, and
 // it will then create that many rectangles on the screen.
@@ -19,15 +19,15 @@ figma.ui.postMessage(getComponentSetParentName(figma.currentPage.selection[0]))
 figma.ui.onmessage = async  (msg: {type: string, count: number}) => {
   console.log("onMessage")
 
-  console.log(await searchOnGithub("button")) 
+  // console.log(await searchOnGithub("button")) 
 
-  // await figma.loadAllPagesAsync()
-  // try{ 
-  //   const componentDictionary = syncFigmaWithStorybook(figma.root)
-  //   console.log(JSON.stringify(componentDictionary, null, 4))
-  // }catch(e) {
-  //   console.error(e)
-  // }
+  await figma.loadAllPagesAsync()
+  const componentDictionary = syncFigmaWithStorybook(figma.root)
+  const storybookComponents = await getStorybookComponents();
+  console.log("Storybook components:", storybookComponents)
+  const missingComponents = getDiff(storybookComponents, componentDictionary)
+  console.log(JSON.stringify(componentDictionary, null, 4))
+
   
 
   
