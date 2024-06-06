@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Header, HttpException, HttpStatus, Post, Query } from '@nestjs/common';
 import { AppService } from './app.service';
 
 @Controller()
@@ -61,8 +61,8 @@ export class AppController {
   }
 
   private async addFilesToBranch(owner: string, repo: string, branch: string, componentName: string, base64Png: string, storyTemplate: string) {
-      const pngFilePath = `src/components/${componentName}/${componentName}.png`;
-      const storyFilePath = `src/components/${componentName}/${componentName}.stories.js`;
+      const pngFilePath = `src/figmama-web/figmama-storybook/${componentName}/${componentName}.png`;
+      const storyFilePath = `src/figmama-web/figmama-storybook/${componentName}/${componentName}.stories.js`;
 
       await this.createFileInRepo(owner, repo, branch, pngFilePath, base64Png);
       await this.createFileInRepo(owner, repo, branch, storyFilePath, Buffer.from(storyTemplate).toString('base64'));
@@ -79,5 +79,15 @@ export class AppController {
           content,
           branch
       });
+  }
+
+  @Post('generate-story')
+  @Header("Content-Type", "application/json")
+  async generateStory(
+    @Body('image') base64Image: string,
+    @Body('componentName') componentName: string
+  ): Promise<{code: string}> {
+    const response = await this.appService.generateStory(base64Image, componentName);
+    return { code: response}
   }
 }
