@@ -11,30 +11,99 @@ import { getStorybookComponents, searchOnGithub } from "./utils/github";
 // full browser environment (See https://www.figma.com/plugin-docs/how-plugins-run).
 
 // This shows the HTML page in "ui.html".
-figma.showUI(__html__);
-figma.ui.postMessage(getComponentSetParentName(figma.currentPage.selection[0]))
+figma.showUI(__html__, {
+  width: 500,
+  height: 500
+});
 // Calls to "parent.postMessage" from within the HTML page will trigger this
 // callback. The callback will be passed the "pluginMessage" property of the
 // posted message.
-figma.ui.onmessage = async  (msg: {type: string, count: number}) => {
-  console.log("onMessage")
+figma.ui.onmessage = async (msg: any) => {
+  if (msg.type === 'fetch-components') {
+    // console.log(await searchOnGithub("button")) 
+    try {
+      await figma.loadAllPagesAsync()
+      const componentDictionary = syncFigmaWithStorybook(figma.root)
+      const storybookComponents = await getStorybookComponents();
+      console.log("Storybook components:", storybookComponents)
+      console.log("Figma Component:", componentDictionary)
+      const missingComponents = getDiff(storybookComponents, componentDictionary).map(it => ({name: it.name, id: it.id}))
+      console.log("Missing Components:", missingComponents.map(it => ({name: it.name, id: it.id})))
+      figma.ui.postMessage({ type: 'components', components: missingComponents });
+    } catch (e) {
+      console.error(e)
+    }
 
-  // console.log(await searchOnGithub("button")) 
-
-  await figma.loadAllPagesAsync()
-  const componentDictionary = syncFigmaWithStorybook(figma.root)
-  const storybookComponents = await getStorybookComponents();
-  console.log("Storybook components:", storybookComponents)
-  const missingComponents = getDiff(storybookComponents, componentDictionary)
-  console.log(JSON.stringify(componentDictionary, null, 4))
-
-  
-
-  
-  // console.log(figma.currentPage.selection[0].parent?.name)
-  // console.log(JSON.stringify(figma.currentPage.selection[0].parent, null, 4))
-  // Make sure to close the plugin when you're done. Otherwise the plugin will
-  // keep running, which shows the cancel button at the bottom of the screen.
-  // figma.closePlugin();
-
+  } else if (msg.type === "cancel") {
+    figma.closePlugin();
+  }else if (msg.type === 'component-action') {
+        const { nodeId, componentName } = msg;
+        await handleComponentAction(nodeId, componentName.split("/")[1].trim());
+    }
 };
+
+async function exportComponentAsPng(nodeId) {
+  const node = await figma.getNodeByIdAsync(nodeId);
+  console.log(node)
+  if (!node || node.type !== "PAGE") {
+      figma.notify("Component not found");
+      return null;
+  }
+
+
+  const png = await node.exportAsync();
+  return figma.base64Encode(png);
+}
+
+function generateStorybookTemplate(componentName) {
+  return `
+import React from 'react';
+import { ${componentName} } from './${componentName}';
+
+export default {
+  title: '${componentName}',
+  component: ${componentName},
+};
+
+const Template = (args) => <${componentName} {...args} />;
+
+export const Primary = Template.bind({});
+Primary.args = {
+  // Add default args here
+};
+`;
+}
+
+async function handleComponentAction(nodeId, componentName) {
+  const base64Png = await exportComponentAsPng(nodeId);
+  if (!base64Png) return;
+
+  const storyTemplate = generateStorybookTemplate(componentName);
+
+  await createBranchAndAddFilesToRepo(componentName, base64Png, storyTemplate);
+  
+  figma.notify("Component exported and Storybook story generated");
+}
+
+// GitHub-specific functions using NestJS backend
+async function createBranchAndAddFilesToRepo(componentName, base64Png, storyTemplate) {
+  const response = await fetch('http://localhost:3000/create-story', {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+          componentName,
+          base64Png,
+          storyTemplate
+      })
+  });
+
+  if (!response.ok) {
+      figma.notify('Failed to create branch and pull request');
+      return;
+  }
+
+  const result = await response.json();
+  figma.notify("donezo");
+}

@@ -15,7 +15,7 @@ export async function getStorybookComponents() {
       return mapFilenamesToOnlyComponentName(data)
 }
 
-function mapFilenamesToOnlyComponentName(list: any): string[] {
+function mapFilenamesToOnlyComponentName(list: any): any[] {
     if(!list["total_count"])
         return []
     return list["items"].map(it => it["name"].split(".")[0]);

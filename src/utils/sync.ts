@@ -8,7 +8,7 @@ export function syncFigmaWithStorybook(root: DocumentNode, pageFormat = COMPONEN
         console.log(it.name)
         return isComponent(it, delimiter)})
 
-    return getComponentNames(foundNodes)
+    return foundNodes
 }
 
 function isComponent<T extends BaseNode>(node: T, delimiter): boolean {
@@ -23,8 +23,8 @@ function getComponentNames(nodes: BaseNode[]): string[] {
 return componentNames
 }
 
-export function getDiff(storybook: string[], figma: string[]): string[] {
-    const missingComponents = figma.filter(it => !storybook.includes(it));
+export function getDiff(storybook: string[], figma: any[]): any[] {
+    const missingComponents = figma.filter(it => !storybook.includes(it.name.split(DELIMITER)[1].trim()));
     
     return missingComponents
 }
